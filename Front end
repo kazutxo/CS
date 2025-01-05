@@ -1,0 +1,144 @@
+import mysql.connector
+def connect_db():
+    return mysql.connector.connect(host="localhost",user="root",
+password="admin@123",database="art_gallery")
+# Adding data
+def add_artist():
+    name = input("Enter Artist's Name: ")
+    artwork = input("Enter Artwork Title: ")
+    medium = input("Enter Artwork Medium: ")
+    size = input("Enter Artwork Size: ")
+    contact_info = input("Enter Artist's Contact Info: ")
+    conn = connect_db()
+    cursor = conn.cursor()
+    cursor.execute("INSERT INTO artist (name, artwork, medium, size, contact_info) VALUES (%s, %s, %s, %s, %s)",(name, artwork, medium, size, contact_info))
+    conn.commit()
+    print("Artist added successfully.")
+    conn.close()
+def add_exhibition():
+    artist_id = input("Enter Artist ID: ")
+    title = input("Enter Exhibition Title: ")
+    location = input("Enter Exhibition Location: ")
+    start_date = input("Enter Start Date (YYYY-MM-DD): ")
+    end_date = input("Enter End Date (YYYY-MM-DD): ")
+    conn = connect_db()
+    cursor = conn.cursor()
+    cursor.execute("INSERT INTO exhibition (artist_id, title, location, start_date, end_date) VALUES (%s, %s, %s, %s, %s)",(artist_id, title, location, start_date, end_date))
+    conn.commit()
+    print("Exhibition added successfully.")
+    conn.close()
+def add_sale():
+    artist_id = input("Enter Artist ID: ")
+    client = input("Enter Client Name: ")
+    sale_date = input("Enter Sale Date (YYYY-MM-DD): ")
+    price = float(input("Enter Sale Price: "))
+    conn = connect_db()
+    cursor = conn.cursor()
+    cursor.execute("INSERT INTO sales (artist_id, client, sale_date, price) VALUES (%s, %s, %s, %s)",(artist_id, client, sale_date, price))
+    conn.commit()
+    print("Sale recorded successfully.")
+    conn.close()
+
+# Update data
+def update_artist():
+    artist_id = input("Enter Artist ID to update: ")
+    conn = connect_db()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM artist WHERE artist_id = %s", (artist_id,))
+    artist = cursor.fetchone()
+    if artist:
+        print(f"Current Details: {artist}")
+        name = input(f"Enter new name (leave empty to keep '{artist['name']}'): ") or artist['name']
+        artwork = input(f"Enter new artwork (leave empty to keep '{artist['artwork']}'): ") or artist['artwork']
+        medium = input(f"Enter new medium (leave empty to keep '{artist['medium']}'): ") or artist['medium']
+        size = input(f"Enter new size (leave empty to keep '{artist['size']}'): ") or artist['size']
+        contact_info = input(f"Enter new contact info (leave empty to keep '{artist['contact_info']}'): ") or artist['contact_info']
+        cursor.execute("UPDATE artist SET name = %s, artwork = %s, medium = %s, size = %s, contact_info = %s WHERE artist_id = %s",(name, artwork, medium, size, contact_info, artist_id))
+        conn.commit()
+        print("Artist updated successfully.")
+    else:
+        print("Artist not found.")
+    conn.close()
+def update_sale():
+    sale_id = input("Enter Sale ID to update: ")
+    conn = connect_db()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM sales WHERE sale_id = %s", (sale_id,))
+    sale = cursor.fetchone()
+    if sale:
+        print(f"Current Details: {sale}")
+        client = input(f"Enter new client (leave empty to keep '{sale['client']}'): ") or sale['client']
+        sale_date = input(f"Enter new sale date (leave empty to keep '{sale['sale_date']}'): ") or sale['sale_date']
+        price = input(f"Enter new price (leave empty to keep '{sale['price']}'): ") or sale['price']
+        cursor.execute("UPDATE sales SET client = %s, sale_date = %s, price = %s WHERE sale_id = %s",(client, sale_date, price, sale_id))
+        conn.commit()
+        print("Sale updated successfully.")
+    else:
+        print("Sale not found.")
+    conn.close()
+# Delete Artist and Related Data
+def delete_artist():
+    artist_id = input("Enter Artist ID to delete: ")
+    conn = connect_db()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM exhibition WHERE artist_id = %s", (artist_id,))
+    cursor.execute("DELETE FROM sales WHERE artist_id = %s", (artist_id,))
+    cursor.execute("DELETE FROM artist WHERE artist_id = %s", (artist_id,))
+    conn.commit()
+    print("Artist and related data deleted successfully.")
+    conn.close()
+# Display all tables in condensed format
+def display_tables_condensed():
+    conn = connect_db()
+    cursor = conn.cursor(dictionary=True)
+    print("\n============================== ARTISTS ==============================")
+    cursor.execute("SELECT * FROM artist")
+    artists = cursor.fetchall()
+    for artist in artists:
+        print(f"{artist['artist_id']}. {artist['name']} - {artist['artwork']} | {artist['medium']}, {artist['size']} | {artist['contact_info']}")
+    print("\n============================== EXHIBITION ==============================")
+    cursor.execute("SELECT * FROM exhibition")
+    exhibitions = cursor.fetchall()
+    for exhibition in exhibitions:
+        print(f"{exhibition['exhibition_id']}. {exhibition['title']} | Artist: {exhibition['artist_id']} | {exhibition['location']} | {exhibition['start_date']} to {exhibition['end_date']}")
+    print("\n============================== SALES ==============================")
+    cursor.execute("SELECT * FROM sales")
+    sales = cursor.fetchall()
+    for sale in sales:
+        print(f"{sale['artist_id']}. {sale['client']} | Artist: {sale['artist_id']} | {sale['sale_date']} | ${sale['price']}")
+    conn.close()
+
+# Main Menu
+def main_menu():
+    print("\nArt Gallery Management System")
+    print("1. Add Artist")
+    print("2. Add Exhibition")
+    print("3. Add Sale")
+    print("4. Update Artist")
+    print("5. Update Sale")
+    print("6. Display All Data")
+    print("7. Delete Artist")
+    print("8. Exit")
+    while True:
+        choice = input("\nEnter your choice: ")
+        if choice == '1':
+            add_artist()
+        elif choice == '2':
+            add_exhibition()
+        elif choice == '3':
+            add_sale()
+        elif choice == '4':
+            update_artist()
+        elif choice == '5':
+            update_sale()
+        elif choice == '6':
+            display_tables_condensed()
+        elif choice == '7':
+            delete_artist()
+        elif choice == '8':
+            print("Exiting program.")
+            break
+        else:
+            print("Invalid choice. Please try again.")
+if __name__ == "__main__":
+    main_menu()
